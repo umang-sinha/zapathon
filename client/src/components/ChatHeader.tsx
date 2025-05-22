@@ -20,10 +20,12 @@ const ChatHeader = ({ onNewChat }: ChatHeaderProps) => {
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </div>
+
         <h1 className="text-lg font-medium bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
           Sales AI Chat
         </h1>
       </div>
+
       <button
         onClick={onNewChat}
         className="bg-black/20 border border-purple-800/50 hover:bg-purple-900/20 text-purple-300 px-4 py-2 rounded flex gap-2 text-sm items-center transition-colors"
