@@ -10,6 +10,7 @@ const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (input.trim() && !disabled) {
       onSendMessage(input);
       setInput("");
@@ -36,6 +37,7 @@ const ChatInput = ({ onSendMessage, disabled }: ChatInputProps) => {
           }}
         />
       </div>
+
       <button
         type="submit"
         disabled={disabled || !input.trim()}
