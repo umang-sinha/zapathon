@@ -1,0 +1,38 @@
+Task: Create 50 professional LinkedIn announcement posts—each one about a new partnership, technology launch, investment, scope-of-work expansion, joint venture, regional rollout, pilot-to-production transition, or R&D milestone.
+Output format: Return a single JSON array (no markdown, no commentary). Each element must be an object with four keys—company, industry, content, hashtags—structured like this:
+{
+  "company": "…",
+  "industry": "…",
+  "content": "…",   // ≥150 words, LinkedIn tone, emoji-free, third-person “we” voice
+  "hashtags": ["#Tag1", "#Tag2", "#Tag3", "#Tag4"]  // 3-4 relevant tags
+}
+Requirements
+50 unique companies (recognisable global brands; no repeats).
+Cover at least these nine verticals, with multiple posts per vertical:
+Airlines
+Travel & Hospitality
+Retail & eCommerce
+FinTech & Payments
+Security & Compliance
+Cloud Enablement & DevOps
+Data Engineering & AI Readiness
+Gen AI & Intelligent Automation
+App Modernisation & Product Engineering
+Each content string must:
+Be 150–200 words.
+State the announcement theme (e.g., “strategic alliance”, “Series C investment”).
+Highlight at least three concrete details (e.g., MVP timeline, projected ROI, tech stack, governance model, KPI targets, geographic rollout).
+End with a forward-looking sentence (“Stay tuned…”, “More updates soon…”).
+hashtags list: choose 3–4 tags that fit BOTH the company/industry and the announcement theme; camel-case multi-word tags.
+No duplicate hashtags across the 50 objects except generic ones like #FinTech, #CloudComputing.
+Output only the raw JSON array. No markdown wrappers, explanations, or trailing commas.
+Example skeleton (do NOT repeat this text—generate fresh content):
+[
+  {
+    "company": "Salesforce",
+    "industry": "App Modernisation & Product Engineering",
+    "content": "We’re thrilled to announce … (150+ words)",
+    "hashtags": ["#AppModernisation", "#Salesforce", "#ProductEngineering", "#Microservices"]
+  },
+  { …49 more objects… }
+]
