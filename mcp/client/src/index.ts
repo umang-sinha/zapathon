@@ -1,0 +1,191 @@
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import readline from "readline";
+import OpenAI from "openai";
+import {
+  ChatCompletionMessageParam,
+  ChatCompletionTool,
+  FunctionParameters,
+} from "openai/resources.mjs";
+
+const OPENROUTER_API_KEY = "";
+const OPENROUTER_MODEL = "";
+const OPENROUTER_API_URL = "";
+
+const openaiClient = new OpenAI({
+  apiKey: OPENROUTER_API_KEY,
+  baseURL: OPENROUTER_API_URL,
+});
+
+interface IMcpTool {
+  name: string;
+  description: string;
+  inputSchema: object;
+}
+
+const convertMCPToolToOpeanAITool = (mcpTool: IMcpTool): ChatCompletionTool => {
+  return {
+    type: "function",
+    function: {
+      name: mcpTool.name,
+      description: mcpTool.description,
+      parameters: mcpTool.inputSchema as FunctionParameters,
+    },
+  };
+};
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+let mcpClient: any;
+let chatHistory: ChatCompletionMessageParam[] = [];
+
+const initMcpClient = async () => {
+  try {
+    const transport = new StdioClientTransport({
+      command: "zsh",
+      args: ["-c", "cd '../server/build' && node index.js"],
+    });
+
+    const client = new Client({
+      name: "mcp-client",
+      version: "1.0.0",
+    });
+
+    console.log("Attempting to connect to local MCP server");
+    await client.connect(transport);
+    mcpClient = client;
+    console.log("Local MCP server connected successfully");
+
+    const availableMCPTools = await mcpClient.listTools();
+    console.log(
+      "Available MCP Tools:",
+      availableMCPTools.tools.map((t: { name: string }) => t.name).join(", ")
+    );
+    chatHistory.push({
+      role: "system",
+      content: `Local MCP server connected. Available tools: ${availableMCPTools.tools
+        .map((t: { name: string }) => t.name)
+        .join(", ")}`,
+    });
+  } catch (error: any) {
+    console.error(
+      "ERROR: Failed to connect to local MCP server:",
+      error.message
+    );
+    console.error("Please ensure:");
+    console.error(
+      "  1. Your MCP server is correctly built and 'index.js' exists in its 'build' directory."
+    );
+    console.error(
+      "  2. The relative path in 'SERVER_ROOT_DIR_RELATIVE_TO_CLIENT' is correct."
+    );
+    console.error(
+      "  3. 'node' (or the specified NODE_EXECUTABLE_PATH) is accessible in your WSL environment's PATH."
+    );
+    console.error(
+      "  4. Your MCP server does not print non-JSON output to stdout during startup (use console.error for logs)."
+    );
+    process.exit(1); // Exit if MCP client cannot connect
+  }
+};
+
+const processMessage = async (userInput: string) => {
+  if (!userInput.trim()) return;
+  if (!mcpClient) {
+    console.log("MCP client not connected yet. Please wait.");
+    return;
+  }
+  if (!OPENROUTER_API_KEY) {
+    console.log("Please set the OPENROUTER_API_KEY environment variable.");
+    return;
+  }
+  chatHistory = [];
+
+  const userMessage: ChatCompletionMessageParam = {
+    role: "user",
+    content: userInput,
+  };
+  console.log(`\nUser: ${userInput}`);
+  chatHistory.push(userMessage);
+
+  try {
+    // Get tools from local MCP server and convert to OpenAI format
+    const mcpTools = await mcpClient.listTools();
+    const openAITools = mcpTools.tools.map(convertMCPToolToOpeanAITool);
+
+    // First call to OpenRouter with tools using OpenAI package
+    console.log("Sending request to OpenRouter (using OpenAI package)...");
+    console.log("Sending request to OpenRouter (using OpenAI package)...");
+    const completion = await openaiClient.chat.completions.create({
+      model: OPENROUTER_MODEL,
+      messages: chatHistory,
+      tools: openAITools,
+      tool_choice: "auto",
+      // OpenRouter specific headers can be passed via the 'extra_headers' option
+      // However, for CLI usage, these are often not strictly necessary unless for logging/analytics on OpenRouter's side
+      // extra_headers: {
+      //   'HTTP-Referer': 'https://your-cli-app.com',
+      //   'X-Title': 'OpenRouter MCP CLI Demo',
+      // },
+    });
+
+    const assistantMessage = completion.choices[0].message;
+    chatHistory.push(assistantMessage); // Add assistant's response to history
+
+    // Check if the model wants to call a tool
+    if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      const toolCall = assistantMessage.tool_calls[0]; // Assuming one tool call for simplicity
+      const functionName = toolCall.function.name;
+      const functionArgs = JSON.parse(toolCall.function.arguments);
+
+      console.log(
+        `\nAssistant: Model requested tool: ${functionName} with args: ${JSON.stringify(
+          functionArgs
+        )}`
+      );
+
+      try {
+        // Execute the tool using the local MCP client
+        const toolResult = await mcpClient.callTool(functionName, functionArgs);
+        console.log("Tool execution result:", toolResult);
+
+        // Add tool output to chat history and send back to OpenRouter
+        const toolMessage: ChatCompletionMessageParam = {
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(toolResult), // Tool output must be a string
+        };
+
+        // Add tool output to chat history
+        chatHistory.push(toolMessage);
+
+        // Second call to OpenRouter with tool results using OpenAI package
+        console.log(
+          "Sending tool result back to OpenRouter (using OpenAI package)..."
+        );
+        const secondCompletion = await openaiClient.chat.completions.create({
+          model: OPENROUTER_MODEL,
+          messages: chatHistory,
+          tools: openAITools, // Still provide tools for context
+        });
+
+        const finalAssistantMessage = secondCompletion.choices[0].message;
+        chatHistory.push(finalAssistantMessage);
+        console.log(`\nAssistant: ${finalAssistantMessage.content}`);
+      } catch (toolError: any) {
+        console.error(
+          "ERROR: Error executing tool or sending tool result:",
+          toolError.message
+        );
+      }
+    } else {
+      // If no tool call, just display the assistant's message
+      console.log(`\nAssistant: ${assistantMessage.content}`);
+    }
+  } catch (error: any) {
+    console.error("ERROR: Error communicating with OpenRouter:", error.message);
+  }
+};
