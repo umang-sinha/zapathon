@@ -22,16 +22,19 @@ const server = new Server(
 );
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
+  console.error("LIST TOOLS")
   return {
     tools: [TOOLS.DIVIDE_TOOL.SCHEMA],
   };
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  console.error("SHOW TOOL")
   if (request.params.name === "get_sales_info") {
     return {};
   }
-  if (request.params.name === TOOLS.DIVIDE_TOOL.NAME) {
+  if (request.params.name == TOOLS.DIVIDE_TOOL.NAME) {
+    console.error("REached here")
     const args = request.params.arguments as
       | Record<string, unknown>
       | undefined;
@@ -48,5 +51,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 const transport = new StdioServerTransport();
 (async () => {
+  console.error("MCP Server: Successfully connected to transport. Awaiting requests."); // <--- ADD THIS
   await server.connect(transport);
 })();

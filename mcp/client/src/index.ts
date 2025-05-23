@@ -1,6 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import readline from "readline";
+import * as dotenv from 'dotenv'
 import OpenAI from "openai";
 import {
   ChatCompletionMessageParam,
@@ -8,13 +9,21 @@ import {
   FunctionParameters,
 } from "openai/resources.mjs";
 
-const OPENROUTER_API_KEY = "";
-const OPENROUTER_MODEL = "";
-const OPENROUTER_API_URL = "";
+dotenv.config();
+
+const OPENROUTER_API_KEY = process.env.OPENAI_API_KEY;
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "";
+const OPENROUTER_API_URL = process.env.OPENROUTER_API_URL;
+console.log("HELo world");
+console.log({
+  OPENROUTER_API_KEY,
+  OPENROUTER_MODEL,
+  OPENROUTER_API_URL
+})
 
 const openaiClient = new OpenAI({
   apiKey: OPENROUTER_API_KEY,
-  baseURL: OPENROUTER_API_URL,
+  // baseURL: OPENROUTER_API_URL,
 });
 
 interface IMcpTool {
@@ -34,18 +43,13 @@ const convertMCPToolToOpeanAITool = (mcpTool: IMcpTool): ChatCompletionTool => {
   };
 };
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
 let mcpClient: any;
 let chatHistory: ChatCompletionMessageParam[] = [];
 
 const initMcpClient = async () => {
   try {
     const transport = new StdioClientTransport({
-      command: "zsh",
+      command: "bash",
       args: ["-c", "cd '../server/build' && node index.js"],
     });
 
@@ -118,7 +122,8 @@ const processMessage = async (userInput: string) => {
 
     // First call to OpenRouter with tools using OpenAI package
     console.log("Sending request to OpenRouter (using OpenAI package)...");
-    console.log("Sending request to OpenRouter (using OpenAI package)...");
+    console.log(chatHistory);
+    console.log({openAITools: openAITools[0].function})
     const completion = await openaiClient.chat.completions.create({
       model: OPENROUTER_MODEL,
       messages: chatHistory,
@@ -137,8 +142,11 @@ const processMessage = async (userInput: string) => {
 
     // Check if the model wants to call a tool
     if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
+      console.log("data - ")
+      console.log(assistantMessage.tool_calls)
       const toolCall = assistantMessage.tool_calls[0]; // Assuming one tool call for simplicity
       const functionName = toolCall.function.name;
+
       const functionArgs = JSON.parse(toolCall.function.arguments);
 
       console.log(
@@ -148,8 +156,10 @@ const processMessage = async (userInput: string) => {
       );
 
       try {
-        // Execute the tool using the local MCP client
-        const toolResult = await mcpClient.callTool(functionName, functionArgs);
+        const toolResult = await mcpClient.callTool({
+          name: functionName,
+          arguments: functionArgs
+        });
         console.log("Tool execution result:", toolResult);
 
         // Add tool output to chat history and send back to OpenRouter
@@ -189,3 +199,23 @@ const processMessage = async (userInput: string) => {
     console.error("ERROR: Error communicating with OpenRouter:", error.message);
   }
 };
+
+const run = async () => {
+  await initMcpClient();
+  await processMessage('divide 4 by 2')
+}
+
+const test = async () => {
+  console.log("Making a simple non-tooling request to test basic connectivity...");
+    try {
+        const completion = await openaiClient.chat.completions.create({
+            model: OPENROUTER_MODEL, // Use your currently set model
+            messages: [{ role: "user", content: "Hello, what is your purpose?" }],
+        });
+        console.log("\nAssistant (Simple Test):", completion.choices[0].message.content);
+    } catch (error: any) {
+        console.error("ERROR: Simple OpenRouter test failed:", error.message);
+    }
+}
+
+run();
