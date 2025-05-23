@@ -1,8 +1,9 @@
 interface ChatHeaderProps {
   onNewChat: () => void;
+  exportTextArrayToPDF: () => void;
 }
 
-const ChatHeader = ({ onNewChat }: ChatHeaderProps) => {
+const ChatHeader = ({ onNewChat, exportTextArrayToPDF }: ChatHeaderProps) => {
   return (
     <div className="flex items-center justify-between border-b border-purple-900/50 bg-black/40 backdrop-blur-md p-4">
       <div className="flex items-center gap-3">
@@ -26,24 +27,33 @@ const ChatHeader = ({ onNewChat }: ChatHeaderProps) => {
         </h1>
       </div>
 
-      <button
-        onClick={onNewChat}
-        className="bg-black/20 border border-purple-800/50 hover:bg-purple-900/20 text-purple-300 px-4 py-2 rounded flex gap-2 text-sm items-center transition-colors"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-4 w-4"
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onNewChat}
+          className="bg-black/20 border border-purple-800/50 hover:bg-purple-900/20 text-purple-300 px-4 py-2 rounded flex gap-2 text-sm items-center transition-colors"
         >
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        New Chat
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          New Chat
+        </button>
+
+        <button
+          className="bg-black/20 border border-purple-800/50 hover:bg-purple-900/20 text-purple-300 px-4 py-2 rounded text-sm transition-colors"
+          onClick={exportTextArrayToPDF}
+        >
+          Export Chat as PDF
+        </button>
+      </div>
     </div>
   );
 };
