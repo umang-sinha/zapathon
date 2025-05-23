@@ -22,19 +22,43 @@ const server = new Server(
 );
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
-  console.error("LIST TOOLS")
+  console.error("LIST TOOLS");
   return {
-    tools: [TOOLS.DIVIDE_TOOL.SCHEMA],
+    tools: [TOOLS.DIVIDE_TOOL.SCHEMA, TOOLS.SALES_TOOL.SCHEMA],
   };
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  console.error("SHOW TOOL")
-  if (request.params.name === "get_sales_info") {
-    return {};
-  }
+  console.error("SHOW TOOL");
+  if (request.params.name === TOOLS.SALES_TOOL.NAME) {
+    const args = request.params.arguments as
+        | Record<string, unknown>
+        | undefined;
+
+    // Extracting 'vertical' and 'numberOfRecords' with their default values
+    const vertical = typeof args?.vertical === "string"
+        ? args.vertical
+        : TOOLS.SALES_TOOL.SCHEMA.inputSchema.properties.vertical.default;
+
+    const numberOfRecords = typeof args?.numberOfRecords === "number"
+        ? args.numberOfRecords
+        : TOOLS.SALES_TOOL.SCHEMA.inputSchema.properties.numberOfRecords.default;
+
+    // Call the action function, passing the extracted arguments
+    // You'll need to define TOOLS.SALES_TOOL.ACTION to accept these arguments.
+    const res = await TOOLS.SALES_TOOL.ACTION(vertical, numberOfRecords);
+
+    // Now 'res' will contain the data returned from your API call
+    // You would typically send this 'res' back as a response to the client.
+    console.log("API response:", res);
+    // Example: send the response back
+    // response.status(200).json(res);
+    return {
+      toolResult: res
+    }
+}
   if (request.params.name == TOOLS.DIVIDE_TOOL.NAME) {
-    console.error("REached here")
+    console.error("REached here");
     const args = request.params.arguments as
       | Record<string, unknown>
       | undefined;
@@ -51,6 +75,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 const transport = new StdioServerTransport();
 (async () => {
-  console.error("MCP Server: Successfully connected to transport. Awaiting requests."); // <--- ADD THIS
+  console.error(
+    "MCP Server: Successfully connected to transport. Awaiting requests."
+  ); // <--- ADD THIS
   await server.connect(transport);
 })();

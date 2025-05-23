@@ -1,7 +1,8 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 import OpenAI from "openai";
+import express from "express";
 dotenv.config();
 const OPENROUTER_API_KEY = process.env.OPENAI_API_KEY;
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "";
@@ -10,7 +11,7 @@ console.log("HELo world");
 console.log({
     OPENROUTER_API_KEY,
     OPENROUTER_MODEL,
-    OPENROUTER_API_URL
+    OPENROUTER_API_URL,
 });
 const openaiClient = new OpenAI({
     apiKey: OPENROUTER_API_KEY,
@@ -110,10 +111,9 @@ const processMessage = async (userInput) => {
             const functionArgs = JSON.parse(toolCall.function.arguments);
             console.log(`\nAssistant: Model requested tool: ${functionName} with args: ${JSON.stringify(functionArgs)}`);
             try {
-                // Execute the tool using the local MCP client
                 const toolResult = await mcpClient.callTool({
                     name: functionName,
-                    arguments: functionArgs
+                    arguments: functionArgs,
                 });
                 console.log("Tool execution result:", toolResult);
                 // Add tool output to chat history and send back to OpenRouter
@@ -134,6 +134,7 @@ const processMessage = async (userInput) => {
                 const finalAssistantMessage = secondCompletion.choices[0].message;
                 chatHistory.push(finalAssistantMessage);
                 console.log(`\nAssistant: ${finalAssistantMessage.content}`);
+                return finalAssistantMessage.content;
             }
             catch (toolError) {
                 console.error("ERROR: Error executing tool or sending tool result:", toolError.message);
@@ -142,6 +143,7 @@ const processMessage = async (userInput) => {
         else {
             // If no tool call, just display the assistant's message
             console.log(`\nAssistant: ${assistantMessage.content}`);
+            return assistantMessage.content;
         }
     }
     catch (error) {
@@ -150,7 +152,7 @@ const processMessage = async (userInput) => {
 };
 const run = async () => {
     await initMcpClient();
-    await processMessage('divide 4 by 2');
+    await processMessage("show top 5 sales companies");
 };
 const test = async () => {
     console.log("Making a simple non-tooling request to test basic connectivity...");
@@ -160,9 +162,43 @@ const test = async () => {
             messages: [{ role: "user", content: "Hello, what is your purpose?" }],
         });
         console.log("\nAssistant (Simple Test):", completion.choices[0].message.content);
+        return completion.choices[0].message.content;
     }
     catch (error) {
         console.error("ERROR: Simple OpenRouter test failed:", error.message);
     }
 };
-run();
+const app = express();
+app.use(express.json());
+app.get("/process", async (req, res) => {
+    const userQuery = req.query.query;
+    if (!userQuery) {
+        return res.status(400).json({
+            error: "Missing 'query' parameter. Please use: /process?query=your_message",
+        });
+    }
+    try {
+        // Call your message processing function
+        const output = await processMessage(String(userQuery));
+        console.log(output);
+        // Return the output as a JSON response
+        res.json({
+            query: userQuery,
+            response: output,
+        });
+    }
+    catch (error) {
+        console.error("Error processing message:", error);
+        res.status(500).json({
+            error: "Failed to process message.",
+            details: error.message,
+        });
+    }
+});
+const runServer = async () => {
+    await initMcpClient();
+    app.listen(3001, () => {
+        console.log(`Server running at http://localhost:3001}`);
+    });
+};
+runServer();
