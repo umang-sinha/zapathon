@@ -1,3 +1,5 @@
+import ReactMarkdown from "react-markdown";
+
 export type MessageType = {
   id: string;
   content: string;
@@ -44,7 +46,9 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             : "bg-gray-800/80 border border-gray-700/50 text-gray-100"
         }`}
       >
-        <p className="whitespace-pre-wrap">{content}</p>
+        <div className="prose prose-invert">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
       </div>
 
       {/* User Messages */}

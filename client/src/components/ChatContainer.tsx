@@ -1,10 +1,22 @@
 import { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
+import { jsPDF } from "jspdf";
 
 import ChatHeader from "./ChatHeader";
 import ChatMessage, { MessageType } from "./ChatMessage";
 import ChatInput from "./ChatInput";
+
+// const exampleMDResponse = `
+// # Welcome to My Page
+
+// This is a paragraph with **bold text**, *italic text*, and a [link](https://example.com).
+
+// ## Features
+
+// 1. Easy to use
+// 2. Fast rendering
+// `;
 
 const introMessage: MessageType = {
   id: "intro",
@@ -66,9 +78,50 @@ const ChatContainer = () => {
     setMessages([]);
   };
 
+  const exportTextArrayToPDF = function () {
+    console.log("Exporting to PDF...");
+
+    const doc = new jsPDF();
+
+    const margin = 10;
+    const maxLineWidth = 180;
+    const lineHeight = 7;
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    doc.setFont("helvetica", "normal");
+
+    doc.setFontSize(12);
+
+    const textArray = messages.map((message) => {
+      return message.isUser
+        ? `User: ${message.content}`
+        : `Response: ${message.content}`;
+    });
+
+    let y = margin;
+
+    textArray.forEach((paragraph) => {
+      const lines = doc.splitTextToSize(paragraph, maxLineWidth);
+      const blockHeight = lines.length * lineHeight;
+
+      if (y + blockHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+
+      doc.text(lines, margin, y);
+      y += blockHeight + 4; // spacing after each paragraph
+    });
+
+    doc.save("texts.pdf");
+  };
+
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <ChatHeader onNewChat={handleNewChat} />
+      <ChatHeader
+        onNewChat={handleNewChat}
+        exportTextArrayToPDF={exportTextArrayToPDF}
+      />
 
       <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-900 to-black">
         <div className="container mx-auto max-w-4xl">
