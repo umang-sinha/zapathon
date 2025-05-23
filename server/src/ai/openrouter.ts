@@ -10,9 +10,8 @@ const { OPENROUTER_API_KEY } = process.env;
 
 debugger;
 
-export async function callOpenRouter() {
+export async function callOpenRouter(prompt: string) {
   try {
-    const prompt = await fs.readFile(path.resolve(process.cwd() + "/src/ai/prompts/dummy_data.txt"), "utf-8");
 
     debugger;
 

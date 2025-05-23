@@ -24,4 +24,28 @@ export const Leads = sequelize.define("Leads", {
     allowNull: false,
     defaultValue: [],
   },
+  lead_score: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  industry_score: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  content_tech_score: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  announcement_type_score: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  hashtag_score: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  rationale: {
+    type: DataTypes.TEXT("long"),
+    allowNull: true,
+  },
 });
