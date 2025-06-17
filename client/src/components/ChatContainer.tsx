@@ -54,15 +54,15 @@ const ChatContainer = () => {
 
     try {
       const response = await axios.get(
-        `https://jsonplaceholder.typicode.com/posts/${Math.floor(
-          Math.random() * 100
-        )}`
+        `http://localhost:3001/process?query=${content}`
       );
+
+      console.log(response);
 
       // Add bot response
       const botMessage: MessageType = {
         id: uuidv4(),
-        content: response.data.body,
+        content: response.data.response,
         isUser: false,
       };
 

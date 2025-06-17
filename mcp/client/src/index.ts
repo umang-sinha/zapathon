@@ -8,8 +8,11 @@ import {
   FunctionParameters,
 } from "openai/resources.mjs";
 import express, { Request, Response } from "express";
+import cors from "cors";
 
 dotenv.config();
+
+
 
 const OPENROUTER_API_KEY = process.env.OPENAI_API_KEY;
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "";
@@ -228,6 +231,7 @@ const test = async () => {
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.get("/process", async (req, res: any) => {
   const userQuery = req.query.query;

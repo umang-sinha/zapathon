@@ -9,7 +9,7 @@ router.get("/", (_req, res) => {
 
 router.get("/leads", async (req: any, res: any) => {
   const vertical = req.query.vertical as string;
-  const limit = parseInt(req.query.limit as string, 10) || 10;
+  const limit = parseInt(req.query.limit as string, 10) || 100;
 
   let leads;
 
