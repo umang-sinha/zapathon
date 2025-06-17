@@ -2,6 +2,8 @@ import axios from "axios";
 
 export const SALES_TOOL_NAME = "get_prospects";
 
+//  TODO: Make sure that the enum is coming from the API
+
 export const SALES_TOOL_SCHEMA = {
   name: SALES_TOOL_NAME, // A more descriptive name for the tool
   description:
@@ -14,6 +16,17 @@ export const SALES_TOOL_SCHEMA = {
         description:
           "The industry or sector to filter prospects by (e.g., 'healthcare', 'finance', 'retail'). Defaults to 'All' if not specified, meaning prospects from all verticals will be considered.",
         default: "All",
+        enum: [
+          "Retail & eCommerce",
+          "Security & Compliance",
+          "Travel & Hospitality",
+          "Cloud Enablement & DevOps",
+          "Gen AI & Intelligent Automation",
+          "Airlines",
+          "FinTech & Payments",
+          "App Modernisation & Product Engineering",
+          "Data Engineering & AI Readiness",
+        ],
       },
       numberOfRecords: {
         // Renamed from 'number' for clarity and to avoid conflict with 'number' type
@@ -35,8 +48,8 @@ export const getProspects = async (
   try {
     const url = `http://localhost:3000/api/leads`;
     const params = {
-        vertical,
-        limit: numberOfRecords,
+      vertical,
+      limit: numberOfRecords,
     };
 
     if (vertical !== "All") {

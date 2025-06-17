@@ -10,6 +10,17 @@ export const SALES_TOOL_SCHEMA = {
                 type: "string",
                 description: "The industry or sector to filter prospects by (e.g., 'healthcare', 'finance', 'retail'). Defaults to 'All' if not specified, meaning prospects from all verticals will be considered.",
                 default: "All",
+                enum: [
+                    "Retail & eCommerce",
+                    "Security & Compliance",
+                    "Travel & Hospitality",
+                    "Cloud Enablement & DevOps",
+                    "Gen AI & Intelligent Automation",
+                    "Airlines",
+                    "FinTech & Payments",
+                    "App Modernisation & Product Engineering",
+                    "Data Engineering & AI Readiness",
+                ],
             },
             numberOfRecords: {
                 // Renamed from 'number' for clarity and to avoid conflict with 'number' type

@@ -10,13 +10,12 @@ const PORT = process.env.PORT || 3000;
 const start = async () => {
   try {
     await Leads.sync();
-
     await sequelize.authenticate();
     console.log("Models loaded:", sequelize.models);
 
     console.log("DB connected");
 
-    populateScores()
+    populateScores();
 
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
@@ -27,4 +26,3 @@ const start = async () => {
 };
 
 start();
-

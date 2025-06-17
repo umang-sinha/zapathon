@@ -31,4 +31,19 @@ router.get("/leads", async (req: any, res: any) => {
   });
 });
 
+router.get("/industries", async (req: any, res: any) => {
+  const uniqueIndustries: any = await Leads.findAll({
+    attributes: ["industry"],
+    group: ["industry"],
+  });
+
+  const industries = uniqueIndustries.map(
+    (lead: { industry: string }) => lead.industry
+  );
+
+  return res.json({
+    data: industries,
+  });
+});
+
 export default router;

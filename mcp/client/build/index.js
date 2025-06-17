@@ -8,12 +8,6 @@ dotenv.config();
 const OPENROUTER_API_KEY = process.env.OPENAI_API_KEY;
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "";
 const OPENROUTER_API_URL = process.env.OPENROUTER_API_URL;
-console.log("HELo world");
-console.log({
-    OPENROUTER_API_KEY,
-    OPENROUTER_MODEL,
-    OPENROUTER_API_URL,
-});
 const openaiClient = new OpenAI({
     apiKey: OPENROUTER_API_KEY,
     // baseURL: OPENROUTER_API_URL,
@@ -74,7 +68,7 @@ const processMessage = async (userInput) => {
         console.log("Please set the OPENROUTER_API_KEY environment variable.");
         return;
     }
-    chatHistory = [];
+    // chatHistory = [];
     const userMessage = {
         role: "user",
         content: userInput,
@@ -151,54 +145,36 @@ const processMessage = async (userInput) => {
         console.error("ERROR: Error communicating with OpenRouter:", error.message);
     }
 };
-const run = async () => {
-    await initMcpClient();
-    await processMessage("show top 5 sales companies");
-};
-const test = async () => {
-    console.log("Making a simple non-tooling request to test basic connectivity...");
-    try {
-        const completion = await openaiClient.chat.completions.create({
-            model: OPENROUTER_MODEL, // Use your currently set model
-            messages: [{ role: "user", content: "Hello, what is your purpose?" }],
-        });
-        console.log("\nAssistant (Simple Test):", completion.choices[0].message.content);
-        return completion.choices[0].message.content;
-    }
-    catch (error) {
-        console.error("ERROR: Simple OpenRouter test failed:", error.message);
-    }
-};
-const app = express();
-app.use(express.json());
-app.use(cors());
-app.get("/process", async (req, res) => {
-    const userQuery = req.query.query;
-    if (!userQuery) {
-        return res.status(400).json({
-            error: "Missing 'query' parameter. Please use: /process?query=your_message",
-        });
-    }
-    try {
-        // Call your message processing function
-        const output = await processMessage(String(userQuery));
-        console.log(output);
-        // Return the output as a JSON response
-        res.json({
-            query: userQuery,
-            response: output,
-        });
-    }
-    catch (error) {
-        console.error("Error processing message:", error);
-        res.status(500).json({
-            error: "Failed to process message.",
-            details: error.message,
-        });
-    }
-});
 const runServer = async () => {
     await initMcpClient();
+    const app = express();
+    app.use(express.json());
+    app.use(cors());
+    app.get("/process", async (req, res) => {
+        const userQuery = req.query.query;
+        if (!userQuery) {
+            return res.status(400).json({
+                error: "Missing 'query' parameter. Please use: /process?query=your_message",
+            });
+        }
+        try {
+            // Call your message processing function
+            const output = await processMessage(String(userQuery));
+            console.log(output);
+            // Return the output as a JSON response
+            res.json({
+                query: userQuery,
+                response: output,
+            });
+        }
+        catch (error) {
+            console.error("Error processing message:", error);
+            res.status(500).json({
+                error: "Failed to process message.",
+                details: error.message,
+            });
+        }
+    });
     app.listen(3001, () => {
         console.log(`Server running at http://localhost:3001}`);
     });

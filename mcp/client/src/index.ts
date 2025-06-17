@@ -12,17 +12,9 @@ import cors from "cors";
 
 dotenv.config();
 
-
-
 const OPENROUTER_API_KEY = process.env.OPENAI_API_KEY;
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "";
 const OPENROUTER_API_URL = process.env.OPENROUTER_API_URL;
-console.log("HELo world");
-console.log({
-  OPENROUTER_API_KEY,
-  OPENROUTER_MODEL,
-  OPENROUTER_API_URL,
-});
 
 const openaiClient = new OpenAI({
   apiKey: OPENROUTER_API_KEY,
@@ -109,7 +101,7 @@ const processMessage = async (userInput: string) => {
     console.log("Please set the OPENROUTER_API_KEY environment variable.");
     return;
   }
-  chatHistory = [];
+  // chatHistory = [];
 
   const userMessage: ChatCompletionMessageParam = {
     role: "user",
@@ -188,7 +180,7 @@ const processMessage = async (userInput: string) => {
         const finalAssistantMessage = secondCompletion.choices[0].message;
         chatHistory.push(finalAssistantMessage);
         console.log(`\nAssistant: ${finalAssistantMessage.content}`);
-        return finalAssistantMessage.content
+        return finalAssistantMessage.content;
       } catch (toolError: any) {
         console.error(
           "ERROR: Error executing tool or sending tool result:",
@@ -198,71 +190,70 @@ const processMessage = async (userInput: string) => {
     } else {
       // If no tool call, just display the assistant's message
       console.log(`\nAssistant: ${assistantMessage.content}`);
-      return assistantMessage.content
+      return assistantMessage.content;
     }
   } catch (error: any) {
     console.error("ERROR: Error communicating with OpenRouter:", error.message);
   }
 };
 
-const run = async () => {
-  await initMcpClient();
-  await processMessage("show top 5 sales companies");
-};
-
-const test = async () => {
-  console.log(
-    "Making a simple non-tooling request to test basic connectivity..."
-  );
-  try {
-    const completion = await openaiClient.chat.completions.create({
-      model: OPENROUTER_MODEL, // Use your currently set model
-      messages: [{ role: "user", content: "Hello, what is your purpose?" }],
-    });
-    console.log(
-      "\nAssistant (Simple Test):",
-      completion.choices[0].message.content
-    );
-    return completion.choices[0].message.content;
-  } catch (error: any) {
-    console.error("ERROR: Simple OpenRouter test failed:", error.message);
-  }
-};
-
-const app = express();
-app.use(express.json());
-app.use(cors());
-
-app.get("/process", async (req, res: any) => {
-  const userQuery = req.query.query;
-
-  if (!userQuery) {
-    return res.status(400).json({
-      error:
-        "Missing 'query' parameter. Please use: /process?query=your_message",
-    });
-  }
-
-  try {
-    // Call your message processing function
-    const output = await processMessage(String(userQuery));
-    console.log(output)
-    // Return the output as a JSON response
-    res.json({
-      query: userQuery,
-      response: output,
-    });
-  } catch (error: any) {
-    console.error("Error processing message:", error);
-    res.status(500).json({
-      error: "Failed to process message.",
-      details: error.message,
-    });
-  }
-});
-
 const runServer = async () => {
   await initMcpClient();
+
+  const app = express();
+  app.use(express.json());
+  app.use(cors());
+
+  app.get("/process", async (req, res: any) => {
+    const userQuery = req.query.query;
+
+    if (!userQuery) {
+      return res.status(400).json({
+        error:
+          "Missing 'query' parameter. Please use: /process?query=your_message",
+      });
+    }
+
+    try {
+      // Call your message processing function
+      const output = await processMessage(String(userQuery));
+      console.log(output);
+      // Return the output as a JSON response
+      res.json({
+        query: userQuery,
+        response: output,
+      });
+    } catch (error: any) {
+      console.error("Error processing message:", error);
+      res.status(500).json({
+        error: "Failed to process message.",
+        details: error.message,
+      });
+    }
+  });
+
+  app.get("/new-chat", async (req, res: any) => {
+    try {
+      const availableMCPTools = await mcpClient.listTools();
+      console.log(
+        "Available MCP Tools:",
+        availableMCPTools.tools.map((t: { name: string }) => t.name).join(", ")
+      );
+      chatHistory = [];
+      chatHistory.push({
+        role: "system",
+        content: `Local MCP server connected. Available tools: ${availableMCPTools.tools
+          .map((t: { name: string }) => t.name)
+          .join(", ")}`,
+      });
+    } catch (error: any) {
+      console.error("Error starting new chat:", error);
+      res.status(500).json({
+        error: "Failed to start new chat.",
+        details: error.message,
+      });
+    }
+  });
   app.listen(3001, () => {
     console.log(`Server running at http://localhost:3001}`);
   });
