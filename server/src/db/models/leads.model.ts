@@ -44,6 +44,14 @@ export const Leads = sequelize.define("Leads", {
     type: DataTypes.FLOAT,
     allowNull: true,
   },
+  contact_name: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  email: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   rationale: {
     type: DataTypes.TEXT("long"),
     allowNull: true,
