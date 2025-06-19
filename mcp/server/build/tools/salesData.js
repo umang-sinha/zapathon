@@ -1,5 +1,6 @@
 import axios from "axios";
 export const SALES_TOOL_NAME = "get_prospects";
+//  TODO: Make sure that the enum is coming from the API
 export const SALES_TOOL_SCHEMA = {
     name: SALES_TOOL_NAME, // A more descriptive name for the tool
     description: "Retrieves the top 'n' prospects to reach out to, optionally filtered by a specific vertical. Use this tool when the user asks for top prospects, prospects to reach out to, or similar queries that imply needing a list of leads.",
@@ -48,6 +49,7 @@ export const getProspects = async (vertical = SALES_TOOL_SCHEMA.inputSchema.prop
             params.limit = numberOfRecords; // Assuming your API uses 'limit' for number of records
         }
         const result = await axios.get(url, { params });
+        console.error("result - ", result.data);
         return result.data; // Assuming the API returns the leads directly in result.data
     }
     catch (error) {

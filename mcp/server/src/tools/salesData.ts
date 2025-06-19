@@ -63,6 +63,7 @@ export const getProspects = async (
     }
 
     const result = await axios.get(url, { params });
+    console.error("result - ", result.data)
     return result.data; // Assuming the API returns the leads directly in result.data
   } catch (error) {
     console.error("Error fetching top prospects:", error);
