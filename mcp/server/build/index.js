@@ -17,7 +17,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     };
 });
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    console.error("SHOW TOOL");
     if (request.params.name === TOOLS.SALES_TOOL.NAME) {
         const args = request.params.arguments;
         // Extracting 'vertical' and 'numberOfRecords' with their default values

@@ -15,7 +15,7 @@ const start = async () => {
 
     console.log("DB connected");
 
-    populateScores();
+    // populateScores();
 
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);

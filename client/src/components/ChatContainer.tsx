@@ -26,6 +26,8 @@ const introMessage: MessageType = {
 };
 
 const ChatContainer = () => {
+  const userId = uuidv4()
+  console.log({userId})
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -54,7 +56,7 @@ const ChatContainer = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:3001/process?query=${content}`
+        `http://localhost:3001/process?query=${content}&userId=${userId}`
       );
 
       console.log(response);
