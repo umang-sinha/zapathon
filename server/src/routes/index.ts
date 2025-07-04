@@ -31,6 +31,31 @@ router.get("/leads", async (req: any, res: any) => {
   });
 });
 
+router.get("/company-details", async (req: any, res: any) => {
+  const vertical = req.query.vertical as string;
+  const company = req.query.company as string;
+
+  let details = {};
+  if (vertical != "All") {
+    details = await Leads.findAll({
+      where: {
+        industry: vertical,
+        company,
+      },
+    });
+  } else {
+    details = await Leads.findAll({
+      where: {
+        company,
+      },
+    });
+  }
+
+  return res.json({
+    data: details,
+  });
+});
+
 router.get("/industries", async (req: any, res: any) => {
   const uniqueIndustries: any = await Leads.findAll({
     attributes: ["industry"],

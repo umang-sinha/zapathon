@@ -24,38 +24,38 @@ const server = new Server(
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   console.error("LIST TOOLS");
   return {
-    tools: [TOOLS.DIVIDE_TOOL.SCHEMA, TOOLS.SALES_TOOL.SCHEMA],
+    tools: [
+      TOOLS.DIVIDE_TOOL.SCHEMA,
+      TOOLS.SALES_TOOL.SCHEMA,
+      TOOLS.COMPANY_TOOL.SCHEMA,
+    ],
   };
 });
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === TOOLS.SALES_TOOL.NAME) {
     const args = request.params.arguments as
-        | Record<string, unknown>
-        | undefined;
+      | Record<string, unknown>
+      | undefined;
 
-    // Extracting 'vertical' and 'numberOfRecords' with their default values
-    const vertical = typeof args?.vertical === "string"
+    const vertical =
+      typeof args?.vertical === "string"
         ? args.vertical
         : TOOLS.SALES_TOOL.SCHEMA.inputSchema.properties.vertical.default;
 
-    const numberOfRecords = typeof args?.numberOfRecords === "number"
+    const numberOfRecords =
+      typeof args?.numberOfRecords === "number"
         ? args.numberOfRecords
-        : TOOLS.SALES_TOOL.SCHEMA.inputSchema.properties.numberOfRecords.default;
+        : TOOLS.SALES_TOOL.SCHEMA.inputSchema.properties.numberOfRecords
+            .default;
 
-    // Call the action function, passing the extracted arguments
-    // You'll need to define TOOLS.SALES_TOOL.ACTION to accept these arguments.
     const res = await TOOLS.SALES_TOOL.ACTION(vertical, numberOfRecords);
 
-    // Now 'res' will contain the data returned from your API call
-    // You would typically send this 'res' back as a response to the client.
     console.log("API response:", res);
-    // Example: send the response back
-    // response.status(200).json(res);
     return {
-      toolResult: res
-    }
-}
+      toolResult: res,
+    };
+  }
   if (request.params.name == TOOLS.DIVIDE_TOOL.NAME) {
     console.error("REached here");
     const args = request.params.arguments as
@@ -64,6 +64,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const a = typeof args?.a === "number" ? args.a : 0;
     const b = typeof args?.b === "number" ? args.b : 0;
     const res = TOOLS.DIVIDE_TOOL.ACTION(a, b);
+    return {
+      toolResult: res,
+    };
+  }
+
+  if (request.params.name === TOOLS.COMPANY_TOOL.NAME) {
+    const args = request.params.arguments as
+      | Record<string, unknown>
+      | undefined;
+
+    const vertical =
+      typeof args?.vertical === "string"
+        ? args.vertical
+        : TOOLS.COMPANY_TOOL.SCHEMA.inputSchema.properties.vertical.default;
+
+    const company = typeof args?.company === "string" ? args.company : "";
+
+    if (company == "") {
+      throw new McpError(ErrorCode.InvalidParams, "Company Not given");
+    }
+
+    const res = await TOOLS.COMPANY_TOOL.ACTION(company, vertical);
+
+    console.log("API response:", res);
     return {
       toolResult: res,
     };
